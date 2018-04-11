@@ -36,10 +36,6 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
     cd ../.. && \
     rm -rf osm2pgsql
 
-# Verify that Mapnik has been installed correctly
-RUN mapnik-config -v && \
-    python -c "import mapnik;print mapnik.__file__"
-
 # Install mod_tile and renderd
 RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
     cd /tmp/mod_tile && \
@@ -125,9 +121,13 @@ ADD README.md /usr/local/share/doc/
 RUN mkdir -p /usr/local/share/doc/run
 ADD help.txt /usr/local/share/doc/run/help.txt
 
+ADD my_init /sbin/my_init
+RUN perl -pi -e 's/\r//g' /sbin/my_init
+
 # Add the entrypoint
 ADD run.sh /usr/local/sbin/run
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Default to showing the usage text
-CMD ["help"]
+CMD cat /usr/local/share/doc/run/help.txt
+#["help"]
