@@ -39,17 +39,18 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
 # TODO: mapnik 3.0.5
 
 # Install the Mapnik library
-RUN cd /tmp && git clone git://github.com/mapnik/mapnik && \
-    cd /tmp/mapnik && \
-    git checkout 2.3.x && \
-    python scons/scons.py configure INPUT_PLUGINS=all OPTIMIZATION=3 SYSTEM_FONTS=/usr/share/fonts/truetype/ && \
-    python scons/scons.py && \
-    python scons/scons.py install && \
-    ldconfig && \
-    cd /tmp && rm -rf /tmp/mapnik
+#RUN cd /tmp && git clone git://github.com/mapnik/mapnik && \
+#    cd /tmp/mapnik && \
+#    git checkout 2.3.x && \
+#    python scons/scons.py configure INPUT_PLUGINS=all OPTIMIZATION=3 SYSTEM_FONTS=/usr/share/fonts/truetype/ && \
+#    python scons/scons.py && \
+#    python scons/scons.py install && \
+#    ldconfig && \
+#    cd /tmp && rm -rf /tmp/mapnik
 
 # Verify that Mapnik has been installed correctly
-RUN python -c 'import mapnik'
+RUN mapnik-config -v && \
+    python -c "import mapnik;print mapnik.__file__"
 
 # Install mod_tile and renderd
 RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
@@ -95,19 +96,21 @@ ADD mod_tile.conf /etc/apache2/mods-available/
 RUN a2enmod mod_tile
 
 # Ensure the webserver user can connect to the gis database
-RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.3/main/pg_hba.conf
+RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.5/main/pg_hba.conf
 
 # Tune postgresql
 ADD postgresql.conf.sed /tmp/
-RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.3/main/postgresql.conf
+RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.5/main/postgresql.conf
 
 # Define the application logging logic
 ADD syslog-ng.conf /etc/syslog-ng/conf.d/local.conf
 RUN rm -rf /var/log/postgresql
 
+RUN apt-get install -y upstart-sysv runit
+
 # Create a `postgresql` `runit` service
 ADD postgresql /etc/sv/postgresql
-RUN update-service --add /etc/sv/postgresql
+RUN ls /etc/sv && update-service --add /etc/sv/postgresql
 
 # Create an `apache2` `runit` service
 ADD apache2 /etc/sv/apache2
