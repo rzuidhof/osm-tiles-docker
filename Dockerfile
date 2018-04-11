@@ -1,20 +1,11 @@
-## -*- docker-image-name: "ncareol/osm-tiles" -*-
-
-##
-# The OpenStreetMap Tile Server
-#
-# This creates an image with containing the OpenStreetMap tile server stack as
-# described at
-# <http://switch2osm.org/serving-tiles/manually-building-a-tile-server-12-04/>.
-#
-
-FROM ncareol/baseimage:0.9.18
-MAINTAINER Erik Johnson <ej@ucar.edu>
+FROM ubuntu:16.04
+LABEL maintainer='Davey Witter <Davey.witter@kpn.com>'
 
 # Set the locale. This affects the encoding of the Postgresql template
 # databases.
+ENV LC_ALL C.UTF-8 
 ENV LANG C.UTF-8
-RUN update-locale LANG=C.UTF-8
+ENV LANGUAGE C.UTF-8
 
 # Ensure `add-apt-repository` is present
 RUN apt-get update -y
@@ -23,32 +14,46 @@ RUN apt-get install -y software-properties-common python-software-properties
 RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
 
 # Install remaining dependencies
-RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff4-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont
+RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff5-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont
 
 RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev
 
 # Install postgresql and postgis
-RUN apt-get install -y postgresql-9.3-postgis-2.1 postgresql-contrib postgresql-server-dev-9.3
+RUN apt-get install -y postgresql-9.5-postgis-2.2 postgresql-contrib postgresql-server-dev-9.5
+
+RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
+
+RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik
 
 # Install osm2pgsql
 RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
     cd /tmp/osm2pgsql && \
-    git checkout 0.88.1 && \
-    ./autogen.sh && \
-    ./configure && \
-    make && make install && \
-    cd /tmp && rm -rf /tmp/osm2pgsql
+    git checkout 0.92.1 && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make && \
+    make install && \
+    cd ../.. && \
+    rm -rf osm2pgsql
 
 # TODO: mapnik 3.0.5
 
 # Install the Mapnik library
 RUN cd /tmp && git clone git://github.com/mapnik/mapnik && \
     cd /tmp/mapnik && \
-    git checkout 2.2.x && \
+    git checkout 2.3.x && \
     python scons/scons.py configure INPUT_PLUGINS=all OPTIMIZATION=3 SYSTEM_FONTS=/usr/share/fonts/truetype/ && \
     python scons/scons.py && \
     python scons/scons.py install && \
     ldconfig && \
+    cd /tmp && rm -rf /tmp/mapnik
+
+RUN cd /tmp && \
+    git clone https://github.com/mapnik/python-mapnik.git && \
+    cd /tmp/python-mapnik && \
+    apt-get install -y python-setuptools python3-setuptools libboost-python-dev && \
+    python setup.py develop && \
+    python setup.py install
     cd /tmp && rm -rf /tmp/mapnik
 
 # Verify that Mapnik has been installed correctly
