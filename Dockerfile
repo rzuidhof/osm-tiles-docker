@@ -23,7 +23,7 @@ RUN apt-get install -y postgresql-9.5-postgis-2.2 postgresql-contrib postgresql-
 
 RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
 
-RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik
+RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik upstart-sysv runit
 
 # Install osm2pgsql
 RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
@@ -35,18 +35,6 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
     make install && \
     cd ../.. && \
     rm -rf osm2pgsql
-
-# TODO: mapnik 3.0.5
-
-# Install the Mapnik library
-#RUN cd /tmp && git clone git://github.com/mapnik/mapnik && \
-#    cd /tmp/mapnik && \
-#    git checkout 2.3.x && \
-#    python scons/scons.py configure INPUT_PLUGINS=all OPTIMIZATION=3 SYSTEM_FONTS=/usr/share/fonts/truetype/ && \
-#    python scons/scons.py && \
-#    python scons/scons.py install && \
-#    ldconfig && \
-#    cd /tmp && rm -rf /tmp/mapnik
 
 # Verify that Mapnik has been installed correctly
 RUN mapnik-config -v && \
@@ -105,8 +93,6 @@ RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.5/main/post
 # Define the application logging logic
 ADD syslog-ng.conf /etc/syslog-ng/conf.d/local.conf
 RUN rm -rf /var/log/postgresql
-
-RUN apt-get install -y upstart-sysv runit
 
 # Create a `postgresql` `runit` service
 ADD postgresql /etc/sv/postgresql
