@@ -8,7 +8,7 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 # Ensure `add-apt-repository` is present
-RUN apt-get update && apt-get install -y dos2unix
+RUN apt-get update && apt-get install -y dos2unix sudo
 RUN apt-get install -y software-properties-common python-software-properties
 
 RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
@@ -92,7 +92,7 @@ RUN rm -rf /var/log/postgresql
 
 # Create a `postgresql` `runit` service
 ADD postgresql /etc/sv/postgresql
-RUN ls /etc/sv && update-service --add /etc/sv/postgresql
+RUN update-service --add /etc/sv/postgresql
 
 # Create an `apache2` `runit` service
 ADD apache2 /etc/sv/apache2
@@ -118,14 +118,22 @@ ENV OSM_IMPORT_CACHE 40
 ADD README.md /usr/local/share/doc/
 
 # Add the help file
-RUN mkdir -p /usr/local/share/doc/run
+RUN mkdir -p /usr/local/share/doc/run && \
+    rm -rf /var/lib/apt/lists/*
 ADD help.txt /usr/local/share/doc/run/help.txt
 
 # Add the entrypoint
-ADD my_init /sbin/my_init
+ADD bin/my_init /sbin/my_init
+ADD bin/setuser /sbin/setuser
+ADD bin/install_clean /sbin/install_clean
 ADD run.sh /usr/local/sbin/run
-RUN dos2unix /usr/local/sbin/run && \
-    dos2unix /sbin/my_init
+RUN dos2unix /sbin/setuser && \
+    dos2unix /usr/local/sbin/run && \
+    dos2unix /sbin/install_clean && \
+    dos2unix /sbin/my_init && \
+    dos2unix /etc/sv/postgresql/* && \
+    dos2unix /etc/sv/renderd/* && \
+    dos2unix /etc/sv/apache2/*
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Default to showing the usage text

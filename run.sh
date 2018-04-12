@@ -18,24 +18,27 @@ _startservice () {
 }
 
 startdb () {
-    _startservice postgresql
+    _startservice /etc/sv/postgresql
 }
 
 initdb () {
     echo "Initialising postgresql"
-    if [ -d /var/lib/postgresql/9.3/main ] && [ $( ls -A /var/lib/postgresql/9.3/main | wc -c ) -ge 0 ]
+    rm -rf /var/lib/postgresql/9.5/main
+    if [ -d /var/lib/postgresql/9.5/main ] && [ $( ls -A /var/lib/postgresql/9.5/main | wc -c ) -ge 0 ]
     then
-        die "Initialisation failed: the directory is not empty: /var/lib/postgresql/9.3/main"
+        echo "Initialisation failed: the directory is not empty: /var/lib/postgresql/9.5/main"
+        die "exists"
     fi
 
-    mkdir -p /var/lib/postgresql/9.3/main && chown -R postgres /var/lib/postgresql/
-    sudo -u postgres -i /usr/lib/postgresql/9.3/bin/initdb --pgdata /var/lib/postgresql/9.3/main
-    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /var/lib/postgresql/9.3/main/server.crt
-    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /var/lib/postgresql/9.3/main/server.key
+    mkdir -p /var/lib/postgresql/9.5/main && chown -R postgres /var/lib/postgresql/
+    sudo -u postgres -i /usr/lib/postgresql/9.5/bin/initdb --pgdata /var/lib/postgresql/9.5/main
+    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /var/lib/postgresql/9.5/main/server.crt
+    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /var/lib/postgresql/9.5/main/server.key
 
     startdb
     createuser
     createdb
+    echo "Database initialized"
 }
 
 createuser () {
@@ -53,7 +56,7 @@ createdb () {
     setuser postgres createdb -O www-data $dbname
 
     # Install the Postgis schema
-    $asweb psql -d $dbname -f /usr/share/postgresql/9.3/contrib/postgis-2.1/postgis.sql
+    $asweb psql -d $dbname -f /usr/share/postgresql/9.5/contrib/postgis-2.2/postgis.sql
 
     $asweb psql -d $dbname -c 'CREATE EXTENSION HSTORE;'
 
@@ -61,7 +64,7 @@ createdb () {
     $asweb psql -d $dbname -c 'ALTER TABLE geometry_columns OWNER TO "www-data"; ALTER TABLE spatial_ref_sys OWNER TO "www-data";'
 
     # Add Spatial Reference Systems from PostGIS
-    $asweb psql -d $dbname -f /usr/share/postgresql/9.3/contrib/postgis-2.1/spatial_ref_sys.sql
+    $asweb psql -d $dbname -f /usr/share/postgresql/9.5/contrib/postgis-2.2/spatial_ref_sys.sql
 }
 
 import () {
