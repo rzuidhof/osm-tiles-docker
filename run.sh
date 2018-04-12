@@ -129,6 +129,7 @@ startweb () {
 }
 
 help () {
+    echo "Help text"
     cat /usr/local/share/doc/run/help.txt
     exit
 }

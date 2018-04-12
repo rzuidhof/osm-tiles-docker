@@ -8,7 +8,7 @@ ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 
 # Ensure `add-apt-repository` is present
-RUN apt-get update -y
+RUN apt-get update && apt-get install -y dos2unix
 RUN apt-get install -y software-properties-common python-software-properties
 
 RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
@@ -121,13 +121,12 @@ ADD README.md /usr/local/share/doc/
 RUN mkdir -p /usr/local/share/doc/run
 ADD help.txt /usr/local/share/doc/run/help.txt
 
-ADD my_init /sbin/my_init
-RUN perl -pi -e 's/\r//g' /sbin/my_init
-
 # Add the entrypoint
+ADD my_init /sbin/my_init
 ADD run.sh /usr/local/sbin/run
+RUN dos2unix /usr/local/sbin/run && \
+    dos2unix /sbin/my_init
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Default to showing the usage text
-CMD cat /usr/local/share/doc/run/help.txt
-#["help"]
+CMD ["help"]
