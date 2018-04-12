@@ -25,6 +25,8 @@ RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-
 
 RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik upstart-sysv runit
 
+RUN apt-get clean
+
 # Install osm2pgsql
 RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
     cd /tmp/osm2pgsql && \
@@ -45,7 +47,17 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
     make install && \
     make install-mod_tile && \
     ldconfig && \
+    cp /tmp/mod_tile/debian/renderd.init /etc/init.d/renderd && \
     cd /tmp && rm -rf /tmp/mod_tile
+
+RUN cd /tmp && git clone https://github.com/gravitystorm/openstreetmap-carto.git && \
+    cd openstreetmap-carto && apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted fonts-hanazono ttf-unifont && \
+    /tmp/openstreetmap-carto/scripts/get-shapefiles.py && \
+    apt-get install -y nodejs-legacy npm && \
+    npm install -g carto@0.18.0 && \
+    carto -a "3.0.0" project.mml > style.xml && \
+    cp /tmp/openstreetmap-carto/style.xml /tmp/style.xml && \
+    cd /tmp && rm -rf /tmp/openstreetmap-carto
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && svn co http://svn.openstreetmap.org/applications/rendering/mapnik mapnik-style
@@ -121,6 +133,8 @@ ADD README.md /usr/local/share/doc/
 RUN mkdir -p /usr/local/share/doc/run && \
     rm -rf /var/lib/apt/lists/*
 ADD help.txt /usr/local/share/doc/run/help.txt
+
+RUN ls /var/lib/mod_tile
 
 # Add the entrypoint
 ADD bin/my_init /sbin/my_init
