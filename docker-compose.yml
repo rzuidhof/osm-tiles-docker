@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+ app-osm:
+  build: .
+  image: osm-tile
+  volumes:
+   - /data/osm-postgresql:/var/lib/postgresql
+   - /data/osm-tiles:/var/lib/mod_tile
+   - /home/davey/osm-tiles-docker/liechtenstein-latest.osm.pbf
+  environment:
+   OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
+   OSM_IMPORT_CACHE: '4000'
+   OSM_RENDER_MIN_ZOOM: '8'
+   OSM_RENDER_MAX_ZOOM: '19'
+   OSM_RENDER_THREADS: 4
+  ports:
+   - '80:80'
+  command: 'startservices'

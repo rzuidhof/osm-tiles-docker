@@ -56,7 +56,7 @@ RUN cd /tmp && git clone https://github.com/gravitystorm/openstreetmap-carto.git
     apt-get install -y nodejs-legacy npm && \
     npm install -g carto@0.18.0 && \
     carto -a "3.0.0" project.mml > style.xml && \
-    cp /tmp/openstreetmap-carto/style.xml /tmp/style.xml && \
+    cp /tmp/openstreetmap-carto/style.xml /style.xml && \
     cd /tmp && rm -rf /tmp/openstreetmap-carto
 
 # Install the Mapnik stylesheet
@@ -86,13 +86,19 @@ ADD index.html /var/www/html/index.html
 # Add OpenLayers.js to the apache index page such that the index.html calls this instead.
 ADD OpenLayers.js /var/www/html/OpenLayers.js
 
+COPY ./000-default.conf /etc/apache2/sites-available/
+COPY ./rewrite.conf /etc/apache2/mods-available/
+
 # Configure mod_tile
 ADD mod_tile.load /etc/apache2/mods-available/
 ADD mod_tile.conf /etc/apache2/mods-available/
 RUN a2enmod mod_tile
 
 # Ensure the webserver user can connect to the gis database
-RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.5/main/pg_hba.conf
+RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.5/main/pg_hba.conf && \
+	mkdir -p /var/run/postgresql/9.5-main.pg_stat_tmp && \
+	chown postgres:postgres /var/run/postgresql/9.5-main.pg_stat_tmp -R
+
 
 # Tune postgresql
 ADD postgresql.conf.sed /tmp/
@@ -134,20 +140,23 @@ RUN mkdir -p /usr/local/share/doc/run && \
     rm -rf /var/lib/apt/lists/*
 ADD help.txt /usr/local/share/doc/run/help.txt
 
-RUN ls /var/lib/mod_tile
-
 # Add the entrypoint
 ADD bin/my_init /sbin/my_init
 ADD bin/setuser /sbin/setuser
 ADD bin/install_clean /sbin/install_clean
 ADD run.sh /usr/local/sbin/run
+RUN chmod a+x /sbin/my_init && \
+	chmod a+x /usr/local/sbin/run && \
+	chmod a+x /sbin/setuser && \
+	chmod a+x /sbin/install_clean
 RUN dos2unix /sbin/setuser && \
     dos2unix /usr/local/sbin/run && \
     dos2unix /sbin/install_clean && \
     dos2unix /sbin/my_init && \
     dos2unix /etc/sv/postgresql/* && \
     dos2unix /etc/sv/renderd/* && \
-    dos2unix /etc/sv/apache2/*
+    dos2unix /etc/sv/apache2/* && \
+	ls /sbin/
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Default to showing the usage text
