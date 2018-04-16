@@ -74,9 +74,6 @@ import () {
     test -n "${import}" || \
         die "No import file present: expected specification via OSM_IMPORT_FILE or existence of /data/import.osm or /data/import.pbf"
 
-    echo "Removing indexes from gis..."
-    $asweb psql -d gis -f /home/openstreetmap-carto/drop_indexes.sql
-
     echo "Importing ${import} into gis"
     echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
         die "Unexpected cache type: expected an integer but found: ${OSM_IMPORT_CACHE}"
@@ -89,24 +86,7 @@ import () {
         number_processes=8
     fi
 
-    append=$1
-    if [ "$append" = "append" ]
-    then
-        append="--append "
-    else
-        append=""
-    fi
-
-    $asweb osm2pgsql $append--slim --hstore --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes --style /home/openstreetmap-carto/openstreetmap-carto.style $import
-
-    echo "Creating indexes into gis..."
-    $asweb psql -d gis -f /home/openstreetmap-carto/indexes.sql
-
-    echo "Import done!"
-}
-
-importappend () {
-    import "append"
+    $asweb osm2pgsql --slim --hstore --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $import
 }
 
 # render tiles via render_list
@@ -115,20 +95,19 @@ render () {
     _startservice renderd
     # wait for services to start
     sleep 10
-    min_zoom=${OSM_RENDER_MIN_ZOOM:-0}
-    max_zoom=${OSM_RENDER_MAX_ZOOM:-8}
-    render_force_arg=$( [ "$OSM_RENDER_FORCE" != false ] && echo '-f' || echo '' )
+	
+    min_zoom=${OSM_MIN_ZOOM:-0}
+    max_zoom=${OSM_MAX_ZOOM:-8}
+    render_force_arg=$( [ "$OSM_RENDER_FORCE" != false ] && echo '--force' || echo '' )
     number_processes=${OSM_RENDER_THREADS:-`nproc`}
     # Limit to 8 to prevent overwhelming pg with connections
     if test $number_processes -ge 8
     then
         number_processes=8
     fi
-
-	chown -R www-data:www-data /var/lib/mod_tile
-
     echo "Rendering OSM tiles"
-    if [ -n "$OSM_RENDER_X_MIN" ] && [ -n "$OSM_RENDER_X_MAX" ] && [ -n "$OSM_RENDER_Y_MIN" ] && [ -n "$OSM_RENDER_Y_MAX" ]
+
+	if [ -n "$OSM_RENDER_X_MIN" ] && [ -n "$OSM_RENDER_X_MAX" ] && [ -n "$OSM_RENDER_Y_MIN" ] && [ -n "$OSM_RENDER_Y_MAX" ]
     then
         echo "$asweb /opt/render_list_geo.pl -n $number_processes $render_force_arg -z $min_zoom -Z $max_zoom -x $OSM_RENDER_X_MIN -X $OSM_RENDER_X_MAX -y $OSM_RENDER_Y_MIN -Y $OSM_RENDER_Y_MAX"
         $asweb /opt/render_list_geo.pl -n $number_processes $render_force_arg -z $min_zoom -Z $max_zoom -x $OSM_RENDER_X_MIN -X $OSM_RENDER_X_MAX -y $OSM_RENDER_Y_MIN -Y $OSM_RENDER_Y_MAX
@@ -136,6 +115,7 @@ render () {
         echo "$asweb render_list $render_force_arg --all --min-zoom $min_zoom --max-zoom $max_zoom --num-threads $number_processes"
         $asweb render_list $render_force_arg --all --min-zoom $min_zoom --max-zoom $max_zoom --num-threads $number_processes
     fi
+    #$asweb render_list $render_force_arg --all --min-zoom $min_zoom --max-zoom $max_zoom --num-threads $number_processes
 }
 
 dropdb () {
@@ -153,67 +133,17 @@ cli () {
 startservices () {
     startdb
     _startservice renderd
-    startweb
+    _startservice apache2
 }
 
 startweb () {
-    if [ -n "$OSM_WEB_AUTHORIZED_IDS" ] || [ -n "$OSM_WEB_AUTHORIZED_REFERERS" ]
-    then
-        if [ -n "$OSM_WEB_AUTHORIZED_IDS" ]
-        then
-            sed -i -e "s/#Authorized key ids: //" /etc/apache2/mods-available/rewrite.conf
-            sed -i -e "s/{{KEY_ID}}/$OSM_WEB_AUTHORIZED_IDS/" /etc/apache2/mods-available/rewrite.conf
-        fi
-        if [ -n "$OSM_WEB_AUTHORIZED_REFERERS" ]
-        then
-            sed -i -e "s/#Authorized referers: //" /etc/apache2/mods-available/rewrite.conf
-            sed -i -e "s/{{AUTHORIZED_REFERERS}}/$OSM_WEB_AUTHORIZED_REFERERS/" /etc/apache2/mods-available/rewrite.conf
-        fi
-        sed -i -e "s/#Include mods-available\/rewrite.conf/Include mods-available\/rewrite.conf/" /etc/apache2/sites-available/000-default.conf
-        a2enmod rewrite
-    fi
     _startservice apache2
 }
 
 help () {
+    echo "Help text"
     cat /usr/local/share/doc/run/help.txt
     exit
-}
-
-start () {
-    if [ -f /tmp/InitDone.txt ]; then
-        echo "[`date '+%H:%M:%S'`] Initialization already done"
-    else
-        echo ""
-        echo "-----------------------------------------------------------------"
-        echo "[`date '+%H:%M:%S'`] initdb"
-        initdb
-        echo ""
-        echo "-----------------------------------------------------------------"
-        echo "[`date '+%H:%M:%S'`] import"
-        import
-        echo ""
-        echo "-----------------------------------------------------------------"
-        echo "[`date '+%H:%M:%S'`] render"
-        render
-    fi
-    touch /tmp/InitDone.txt
-
-    echo ""
-    echo "====================================================================="
-    echo "[`date '+%H:%M:%S'`] startservices"
-    echo ""
-    echo "---------------------------------------------------------------------"
-    echo "[`date '+%H:%M:%S'`] startdb"
-    startdb
-    echo ""
-    echo "---------------------------------------------------------------------"
-    echo "[`date '+%H:%M:%S'`] _startservice renderd"
-    _startservice renderd
-    echo ""
-    echo "---------------------------------------------------------------------"
-    echo "[`date '+%H:%M:%S'`] startweb"
-    startweb
 }
 
 # wait until 2 seconds after boot when runit will have started supervising the services.

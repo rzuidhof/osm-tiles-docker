@@ -53,36 +53,37 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
 RUN cd /tmp && git clone https://github.com/gravitystorm/openstreetmap-carto.git && \
     cd openstreetmap-carto && apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted fonts-hanazono ttf-unifont && \
 	cd /tmp
-RUN git clone https://github.com/googlei18n/noto-emoji.git && git clone https://github.com/googlei18n/noto-fonts.git && \
-	cp noto-emoji/fonts/NotoColorEmoji.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-emoji/fonts/NotoEmoji-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoNaskhArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoNaskhArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansAdlam-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansAdlamUnjoined-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansChakma-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansOsage-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/hinted/NotoSansSinhalaUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/unhinted/NotoSansSymbols2-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/unhinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/unhinted/NotoSansCherokee-Bold.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/unhinted/NotoSansSinhalaUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-	cp noto-fonts/unhinted/NotoSansSymbols-Bold.ttf /usr/share/fonts/truetype/noto && \ 
-	cp noto-fonts/unhinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-	fc-cache -fv && \
-	apt install fontconfig && \
-	fc-list && \
-	fc-list | grep Emoji && \
-	cd /tmp/openstreetmap-carto 
+#RUN git clone https://github.com/googlei18n/noto-emoji.git && git clone https://github.com/googlei18n/noto-fonts.git
+#RUN cp noto-emoji/fonts/NotoColorEmoji.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-emoji/fonts/NotoEmoji-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoNaskhArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoNaskhArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansAdlam-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansAdlamUnjoined-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansChakma-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansOsage-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/hinted/NotoSansSinhalaUI-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/unhinted/NotoSansSymbols2-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/unhinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/unhinted/NotoSansCherokee-Bold.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/unhinted/NotoSansSinhalaUI-Bold.ttf /usr/share/fonts/truetype/noto && \
+#	cp noto-fonts/unhinted/NotoSansSymbols-Bold.ttf /usr/share/fonts/truetype/noto && \ 
+#	cp noto-fonts/unhinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
+#	fc-cache -fv && \
+#	apt install fontconfig && \
+#	fc-list && \
+#	fc-list | grep Emoji
+RUN cd /tmp/openstreetmap-carto 
 RUN apt-get install -y fonts-dejavu-core && \
 	/tmp/openstreetmap-carto/scripts/get-shapefiles.py && \
-    apt-get install -y nodejs-legacy npm && \
+    cd /tmp/openstreetmap-carto && apt-get install -y nodejs-legacy npm && \
     npm install -g carto@0.18.0 && \
     carto -a "3.0.0" project.mml > style.xml && \
-    cp /tmp/openstreetmap-carto/style.xml /home/style.xml && \
-    cd /tmp && rm -rf /tmp/openstreetmap-carto
+    #cp /tmp/openstreetmap-carto/style.xml /home/style.xml && \
+	cp -r /tmp/openstreetmap-carto /home/openstreetmap-carto && \ 
+	cd /tmp
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && svn co http://svn.openstreetmap.org/applications/rendering/mapnik mapnik-style
@@ -99,7 +100,9 @@ RUN cd /usr/local/src/mapnik-style/inc && sed --file /tmp/settings.sed  settings
 
 # Configure renderd
 ADD renderd.conf.sed /tmp/
-RUN cd /usr/local/etc && sed --file /tmp/renderd.conf.sed --in-place renderd.conf
+RUN cp -p /usr/local/etc/renderd.conf /usr/local/etc/renderd.conf.orig
+COPY renderd.conf /usr/local/etc/
+#RUN cd /usr/local/etc && sed --file /tmp/renderd.conf.sed --in-place renderd.conf
 
 # Create the files required for the mod_tile system to run
 RUN mkdir /var/run/renderd && chown www-data: /var/run/renderd
@@ -145,14 +148,13 @@ RUN update-service --add /etc/sv/apache2
 ADD renderd /etc/sv/renderd
 RUN update-service --add /etc/sv/renderd
 
-# Clean up APT when done
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#Add the perl script to render only an extract of the map
+COPY ./render_list_geo.pl /opt/
+ADD drop_indexes.sql /home/openstreetmap-carto/drop_indexes.sql
+RUN chmod +x /opt/render_list_geo.pl
 
 # Expose the webserver and database ports
 EXPOSE 80 5432
-
-# We need the volume for importing data from
-VOLUME ["/data"]
 
 # Set the osm2pgsql import cache size in MB. Used in `run import`.
 ENV OSM_IMPORT_CACHE 40
@@ -180,9 +182,13 @@ RUN dos2unix /sbin/setuser && \
     dos2unix /sbin/my_init && \
     dos2unix /etc/sv/postgresql/* && \
     dos2unix /etc/sv/renderd/* && \
-    dos2unix /etc/sv/apache2/* && \
-	ls /sbin/
+    dos2unix /etc/sv/apache2/*
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
+
+RUN chmod a+x /var/lib/mod_tile
 
 # Default to showing the usage text
 CMD ["help"]
+
+# Clean up APT
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

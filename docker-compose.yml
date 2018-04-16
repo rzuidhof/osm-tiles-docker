@@ -10,10 +10,9 @@ services:
    - /home/davey/osm-tiles-docker/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
-   OSM_IMPORT_CACHE: '4000'
-   OSM_RENDER_MIN_ZOOM: '8'
-   OSM_RENDER_MAX_ZOOM: '19'
-   OSM_RENDER_THREADS: 4
+   OSM_IMPORT_CACHE: '900'
+   OSM_RENDER_MAX_ZOOM: '9'
+   OSM_RENDER_FORCE: 'false'
   ports:
-   - '80:80'
-  command: 'startservices'
+   - '8000:80'
+  command: 'startweb'
