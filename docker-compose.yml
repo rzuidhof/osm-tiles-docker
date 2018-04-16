@@ -7,7 +7,7 @@ services:
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
-   - /home/davey/osm-tiles-docker/liechtenstein-latest.osm.pbf
+   - /home/davey/osm-tiles-docker/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
    OSM_IMPORT_CACHE: '4000'
