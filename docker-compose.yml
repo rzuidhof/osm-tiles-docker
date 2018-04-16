@@ -2,16 +2,16 @@ version: '2'
 
 services:
  app-osm:
-  build: .
-  image: drwitter/osm-tile
+
+  image: drwitter/osm-tiles
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
-   - /home/davey/osm-tiles-docker/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
+   - /data/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
    OSM_IMPORT_CACHE: '900'
-   OSM_RENDER_MAX_ZOOM: '9'
+   OSM_RENDER_MAX_ZOOM: '10'
    OSM_RENDER_FORCE: 'false'
   ports:
    - '8000:80'

@@ -8,3 +8,4 @@ wiki
 LICENSE
 renderd.conf.polar
 postgresql.conf.sed.1GB
+*.pbf.osm

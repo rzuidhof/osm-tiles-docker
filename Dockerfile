@@ -25,7 +25,7 @@ RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-
 
 RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik upstart-sysv runit
 
-RUN apt-get clean
+
 
 # Install osm2pgsql
 RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
@@ -53,35 +53,35 @@ RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
 RUN cd /tmp && git clone https://github.com/gravitystorm/openstreetmap-carto.git && \
     cd openstreetmap-carto && apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted fonts-hanazono ttf-unifont && \
 	cd /tmp
-#RUN git clone https://github.com/googlei18n/noto-emoji.git && git clone https://github.com/googlei18n/noto-fonts.git
-#RUN cp noto-emoji/fonts/NotoColorEmoji.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-emoji/fonts/NotoEmoji-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoNaskhArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoNaskhArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansAdlam-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansAdlamUnjoined-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansChakma-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansOsage-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/hinted/NotoSansSinhalaUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/unhinted/NotoSansSymbols2-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/unhinted/NotoSansArabicUI-Regular.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/unhinted/NotoSansCherokee-Bold.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/unhinted/NotoSansSinhalaUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-#	cp noto-fonts/unhinted/NotoSansSymbols-Bold.ttf /usr/share/fonts/truetype/noto && \ 
-#	cp noto-fonts/unhinted/NotoSansArabicUI-Bold.ttf /usr/share/fonts/truetype/noto && \
-#	fc-cache -fv && \
-#	apt install fontconfig && \
-#	fc-list && \
-#	fc-list | grep Emoji
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RUN cd /tmp/openstreetmap-carto 
 RUN apt-get install -y fonts-dejavu-core && \
 	/tmp/openstreetmap-carto/scripts/get-shapefiles.py && \
     cd /tmp/openstreetmap-carto && apt-get install -y nodejs-legacy npm && \
     npm install -g carto@0.18.0 && \
     carto -a "3.0.0" project.mml > style.xml && \
-    #cp /tmp/openstreetmap-carto/style.xml /home/style.xml && \
+
 	cp -r /tmp/openstreetmap-carto /home/openstreetmap-carto && \ 
 	cd /tmp
 
@@ -102,7 +102,7 @@ RUN cd /usr/local/src/mapnik-style/inc && sed --file /tmp/settings.sed  settings
 ADD renderd.conf.sed /tmp/
 RUN cp -p /usr/local/etc/renderd.conf /usr/local/etc/renderd.conf.orig
 COPY renderd.conf /usr/local/etc/
-#RUN cd /usr/local/etc && sed --file /tmp/renderd.conf.sed --in-place renderd.conf
+
 
 # Create the files required for the mod_tile system to run
 RUN mkdir /var/run/renderd && chown www-data: /var/run/renderd
