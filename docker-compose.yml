@@ -3,7 +3,7 @@ version: '2'
 services:
  app-osm:
   build: .
-  image: osm-tile
+  image: drwitter/osm-tile
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
