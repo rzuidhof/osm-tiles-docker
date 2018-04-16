@@ -2,7 +2,6 @@ version: '2'
 
 services:
  app-osm:
-
   image: drwitter/osm-tiles
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
