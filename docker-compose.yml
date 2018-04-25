@@ -16,4 +16,4 @@ services:
    OSM_RENDER_FORCE: 'false'
   ports:
    - '8000:80'
-  command: 'startservices'
+  command: 'startweb'

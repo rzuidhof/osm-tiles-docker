@@ -1,6 +1,14 @@
 FROM ubuntu:16.04
 LABEL maintainer='Davey Witter <Davey.witter@kpn.com>'
 
+# Set the version numbers for each component
+ENV POSTGRES_VERSION 9.5
+ENV POSTGIS_VERSION 2.2
+ENV OSM2PGSQL 0.92.1
+ENV GIT_CARTO 3.0.1
+ENV CARTO 0.18.0
+ENV LIBLUA 5.2
+
 # Set the locale. This affects the encoding of the Postgresql template
 # databases.
 ENV LC_ALL C.UTF-8 
@@ -14,21 +22,23 @@ RUN apt-get install -y software-properties-common python-software-properties
 RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
 
 # Install remaining dependencies
-RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff5-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont
+RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff5-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua${LIBLUA}-dev ttf-unifont
 
 RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev
 
 # Install postgresql and postgis
-RUN apt-get install -y postgresql-9.5-postgis-2.2 postgresql-contrib postgresql-server-dev-9.5
 
-RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
+
+RUN apt-get install -y postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_VERSION} postgresql-contrib postgresql-server-dev-${POSTGRES_VERSION}
+
+RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua${LIBLUA}-dev
 
 RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik upstart-sysv runit
 
 # Install osm2pgsql
 RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
     cd /tmp/osm2pgsql && \
-    git checkout 0.92.1 && \
+    git checkout ${OSM2PGSQL} && \
     mkdir build && cd build && \
     cmake .. && \
     make && \
@@ -55,7 +65,7 @@ RUN cd /tmp/openstreetmap-carto
 RUN apt-get install -y fonts-dejavu-core && \
 	/tmp/openstreetmap-carto/scripts/get-shapefiles.py && \
     cd /tmp/openstreetmap-carto && apt-get install -y nodejs-legacy npm && \
-    npm install -g carto@0.18.0 && \
+    npm install -g carto@${CARTO} && \
     carto -a "3.0.0" project.mml > style.xml && \
 
 	cp -r /tmp/openstreetmap-carto /home/openstreetmap-carto && \ 
@@ -97,9 +107,9 @@ ADD bin/mod_tile.conf /etc/apache2/mods-available/
 RUN a2enmod mod_tile
 
 # Ensure the webserver user can connect to the gis database
-RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.5/main/pg_hba.conf && \
-	mkdir -p /var/run/postgresql/9.5-main.pg_stat_tmp && \
-	chown postgres:postgres /var/run/postgresql/9.5-main.pg_stat_tmp -R
+RUN sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/${POSTGRES_VERSION}/main/pg_hba.conf && \
+	mkdir -p /var/run/postgresql/${POSTGRES_VERSION}-main.pg_stat_tmp && \
+	chown postgres:postgres /var/run/postgresql/${POSTGRES_VERSION}-main.pg_stat_tmp -R
 
 # Tune postgresql
 ADD bin/postgresql.conf.sed /tmp/
