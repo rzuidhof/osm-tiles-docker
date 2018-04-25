@@ -3,15 +3,17 @@ version: '2'
 services:
  app-osm:
   image: drwitter/osm-tiles
+  restart: always
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
-   - /data/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
+   - /data/netherlands-latest.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
-   OSM_IMPORT_CACHE: '900'
-   OSM_RENDER_MAX_ZOOM: '10'
+   OSM_IMPORT_CACHE: '3500'
+   OSM_RENDER_MIN_ZOOM: '0'
+   OSM_RENDER_MAX_ZOOM: '14'
    OSM_RENDER_FORCE: 'false'
   ports:
    - '8000:80'
-  command: 'startweb'
+  command: 'startservices'

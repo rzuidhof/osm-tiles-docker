@@ -140,6 +140,14 @@ RUN mkdir -p /usr/local/share/doc/run && \
     rm -rf /var/lib/apt/lists/*
 ADD bin/help.txt /usr/local/share/doc/run/help.txt
 
+
+RUN mv /etc/apache2/conf-available/security.conf /etc/apache2/conf-available/security.conf.orig && \
+	cd /etc/apache2/conf-available && \
+	wget https://raw.githubusercontent.com/virtadpt/ubuntu-hardening/master/16.04-lts/apache2/conf-available/security.conf && \
+	cd /tmp/
+
+
+
 # Add the entrypoint
 ADD bin/my_init /sbin/my_init
 ADD bin/setuser /sbin/setuser
