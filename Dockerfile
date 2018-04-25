@@ -113,7 +113,7 @@ RUN sed -i -e 's/local   all             all                                    
 
 # Tune postgresql
 ADD bin/postgresql.conf.sed /tmp/
-RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.5/main/postgresql.conf
+RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf
 
 # Define the application logging logic
 ADD bin/syslog-ng.conf /etc/syslog-ng/conf.d/local.conf
