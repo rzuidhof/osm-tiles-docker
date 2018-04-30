@@ -113,8 +113,8 @@ importappend () {
 render () {
     startdb
 
-    sed -i 's/num_threads=4/num_threads=${OSM_RENDER_THREADS:4}/g' /usr/local/etc/renderd.conf
-    cat /usr/local/etc/renderd.conf
+
+
     _startservice renderd
     # wait for services to start
     sleep 10
@@ -122,10 +122,10 @@ render () {
     max_zoom=${OSM_RENDER_MAX_ZOOM:-8}
     render_force_arg=$( [ "$OSM_RENDER_FORCE" != false ] && echo '-f' || echo '' )
     number_processes=${OSM_RENDER_THREADS:-`nproc`}
-    # Limit to 8 to prevent overwhelming pg with connections
-    if test $number_processes -ge 8
+    # Limit to 32 to prevent overwhelming pg with connections
+    if test $number_processes -ge 32
     then
-        number_processes=8
+        number_processes=32
     fi
 
 	chown -R www-data:www-data /var/lib/mod_tile
