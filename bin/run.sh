@@ -112,6 +112,9 @@ importappend () {
 # render tiles via render_list
 render () {
     startdb
+
+    sed -i 's/num_threads=4/num_threads=${OSM_RENDER_THREADS:4}/g' /usr/local/etc/renderd.conf
+    cat /usr/local/etc/renderd.conf
     _startservice renderd
     # wait for services to start
     sleep 10
