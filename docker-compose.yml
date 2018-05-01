@@ -7,7 +7,7 @@ services:
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
-   - /data/liechtenstein-latest.osm.pbf:/tmp/import.osm.pbf
+   - /data/netherlands-latest.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
    OSM_IMPORT_CACHE: '3500'
@@ -15,6 +15,7 @@ services:
    OSM_RENDER_MAX_ZOOM: '12'
    OSM_RENDER_FORCE: 'false'
    OSM_RENDER_THREADS: 8
+   OSM_USE_HARDENED_SECURITY: 'true'
   ports:
    - '8000:80'
-  command: 'startweb'
+  command: 'startservices'

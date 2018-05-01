@@ -160,6 +160,25 @@ startservices () {
 }
 
 startweb () {
+	if [ $OSM_USE_HARDENED_SECURITY = true ]
+
+
+		then rm -rf /etc/apache2/conf-available/security.conf && \	
+		cp /etc/apache2/conf-available/security.conf.hard /etc/apache2/conf-available/security.conf && \
+		a2enmod headers && \
+		a2enmod rewrite && \
+		echo "true"
+	elif [ $OSM_USE_HARDENED_SECURITY = false ]
+		then rm -rf /etc/apache2/conf-available/security.conf && \
+		cp /etc/apache2/conf-available/security.conf.orig /etc/apache2/conf-available/security.conf && \ 
+		a2enmod rewrite && \
+		a2enmod headers && \
+		echo "false"
+	else
+		echo "else"
+	fi
+
+
     if [ -n "$OSM_WEB_AUTHORIZED_IDS" ] || [ -n "$OSM_WEB_AUTHORIZED_REFERERS" ]
     then
         if [ -n "$OSM_WEB_AUTHORIZED_IDS" ]
@@ -173,7 +192,9 @@ startweb () {
             sed -i -e "s/{{AUTHORIZED_REFERERS}}/$OSM_WEB_AUTHORIZED_REFERERS/" /etc/apache2/mods-available/rewrite.conf
         fi
         sed -i -e "s/#Include mods-available\/rewrite.conf/Include mods-available\/rewrite.conf/" /etc/apache2/sites-available/000-default.conf
+         
         a2enmod rewrite
+	
     fi
     _startservice apache2
 }

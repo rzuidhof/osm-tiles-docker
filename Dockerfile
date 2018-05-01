@@ -154,6 +154,7 @@ ADD bin/help.txt /usr/local/share/doc/run/help.txt
 RUN mv /etc/apache2/conf-available/security.conf /etc/apache2/conf-available/security.conf.orig && \
 	cd /etc/apache2/conf-available && \
 	wget https://raw.githubusercontent.com/virtadpt/ubuntu-hardening/master/16.04-lts/apache2/conf-available/security.conf && \
+	mv /etc/apache2/conf-available/security.conf /etc/apache2/conf-available/security.conf.hard && \
 	cd /tmp/
 
 
