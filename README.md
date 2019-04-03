@@ -18,8 +18,8 @@ This image is adapted from [`homme/openstreetmap-tiles-docker`](https://hub.dock
 The image is based on an image of `ncareol/osm-tiles` (https://hub.docker.com/r/ncareol/osm-tiles). The base image is replaced with an empty Ubuntu (https://hub.docker.com/_/ubuntu/) version 16.04 (https://hub.docker.com/r/library/ubuntu/tags/16.04/) image.
 Besides the packages are updated to the newest versions as of 04/12/2018. It includes:
 
-- **PostgreSQL** `9.5`
-- **PostGIS** `2.2` extensions
+- **PostgreSQL** `9.6`
+- **PostGIS** `2.5` extensions
 - **Apache** `2`
 - [**osm2pgsql**](http://wiki.openstreetmap.org/wiki/Osm2pgsql)
 - [**mapnik**](http://mapnik.org/)

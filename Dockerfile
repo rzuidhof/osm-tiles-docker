@@ -2,9 +2,9 @@ FROM ubuntu:16.04
 LABEL maintainer='Davey Witter <Davey.witter@kpn.com>'
 
 # Set the version numbers for each component
-ENV POSTGRES_VERSION 9.5
-ENV POSTGIS_VERSION 2.2
-ENV OSM2PGSQL 0.92.1
+ENV POSTGRES_VERSION 9.6
+ENV POSTGIS_VERSION 2.5
+ENV OSM2PGSQL 0.96.0
 ENV GIT_CARTO 3.0.1
 ENV CARTO 0.18.0
 ENV LIBLUA 5.2
@@ -27,9 +27,13 @@ RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential 
 RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev
 
 # Install postgresql and postgis
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt xenial-pgdg main" >> \
+      /etc/apt/sources.list && \
+    wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | \
+      apt-key add -
+RUN apt-get -qq update
 
-
-RUN apt-get install -y postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_VERSION} postgresql-contrib postgresql-server-dev-${POSTGRES_VERSION}
+RUN apt-get install -y postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_VERSION} postgresql-contrib-${POSTGRES_VERSION} postgresql-server-dev-${POSTGRES_VERSION}
 
 RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua${LIBLUA}-dev
 
