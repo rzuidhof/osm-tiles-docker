@@ -1,78 +1,55 @@
-FROM ubuntu:16.04
-LABEL maintainer='Davey Witter <Davey.witter@kpn.com>'
+FROM ubuntu:18.04
+LABEL maintainer='Richard Zuidhof <richard.zuidhof@kpn.com>'
+# Updated to version for Ubuntu 18.04 LTS "Bionic", credits to https://www.linuxbabe.com/ubuntu/openstreetmap-tile-server-ubuntu-18-04-osm
 
 # Set the version numbers for each component
-ENV POSTGRES_VERSION 9.6
+ENV POSTGRES_VERSION 11
 ENV POSTGIS_VERSION 2.5
-ENV OSM2PGSQL 0.96.0
-ENV GIT_CARTO 3.0.1
+ENV GIT_CARTO 4.20.0
 ENV CARTO 0.18.0
-ENV LIBLUA 5.2
 
 # Set the locale. This affects the encoding of the Postgresql template
 # databases.
-ENV LC_ALL C.UTF-8 
+ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
+ENV TZ Europe/Amsterdam
+ENV DEBIAN_FRONTEND noninteractive
 
-# Ensure `add-apt-repository` is present
-RUN apt-get update && apt-get install -y dos2unix sudo
-RUN apt-get install -y software-properties-common python-software-properties
+# Ensure everything is latest version
+RUN apt update && apt upgrade
 
-RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
-
-# Install remaining dependencies
-RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff5-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua${LIBLUA}-dev ttf-unifont
-
-RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev
+# Install tools
+RUN apt install -y tar wget gnupg software-properties-common upstart-sysv runit
 
 # Install postgresql and postgis
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt xenial-pgdg main" >> \
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt bionic-pgdg main" >> \
       /etc/apt/sources.list && \
     wget --quiet -O - http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc | \
       apt-key add -
-RUN apt-get -qq update
+RUN apt -qq update
 
-RUN apt-get install -y postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_VERSION} postgresql-contrib-${POSTGRES_VERSION} postgresql-server-dev-${POSTGRES_VERSION}
+RUN apt install -y postgresql-${POSTGRES_VERSION}-postgis-${POSTGIS_VERSION} postgresql-contrib-${POSTGRES_VERSION}
 
-RUN apt-get install -y make cmake g++ libboost-dev libboost-system-dev libboost-filesystem-dev libexpat1-dev zlib1g-dev libbz2-dev libpq-dev libproj-dev lua5.2 liblua${LIBLUA}-dev
+# Install Apache, mod_tile and renderd
+RUN add-apt-repository -y ppa:osmadmins/ppa
+RUN apt install -y libapache2-mod-tile renderd
 
-RUN apt-get install -y git libgdal-dev mapnik-utils python-mapnik upstart-sysv runit
+# Install Mapnik and OSM2PGSQL
+RUN apt install -y curl unzip gdal-bin mapnik-utils libmapnik-dev nodejs npm osm2pgsql
+RUN npm install -g carto
 
-# Install osm2pgsql
-RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git && \
-    cd /tmp/osm2pgsql && \
-    git checkout ${OSM2PGSQL} && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make && \
-    make install && \
-    cd ../.. && \
-    rm -rf osm2pgsql
-
-# Install mod_tile and renderd
-RUN cd /tmp && git clone git://github.com/openstreetmap/mod_tile.git && \
-    cd /tmp/mod_tile && \
-    ./autogen.sh && \
-    ./configure && \
-    make && \
-    make install && \
-    make install-mod_tile && \
-    ldconfig && \
-    cp /tmp/mod_tile/debian/renderd.init /etc/init.d/renderd && \
-    cd /tmp && rm -rf /tmp/mod_tile
-
-RUN cd /tmp && git clone https://github.com/gravitystorm/openstreetmap-carto.git && \
-    cd openstreetmap-carto && apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted fonts-hanazono ttf-unifont && \
+RUN cd /tmp && wget https://github.com/gravitystorm/openstreetmap-carto/archive/v${GIT_CARTO}.tar.gz && tar xzf v${GIT_CARTO}.tar.gz && \
+    cd openstreetmap-carto-v${GIT_CARTO} && apt install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted fonts-hanazono ttf-unifont && \
 	cd /tmp
-RUN cd /tmp/openstreetmap-carto 
-RUN apt-get install -y fonts-dejavu-core && \
+RUN cd /tmp/openstreetmap-carto
+RUN apt install -y fonts-dejavu-core && \
 	/tmp/openstreetmap-carto/scripts/get-shapefiles.py && \
-    cd /tmp/openstreetmap-carto && apt-get install -y nodejs-legacy npm && \
+    cd /tmp/openstreetmap-carto && apt install -y nodejs-legacy npm && \
     npm install -g carto@${CARTO} && \
     carto -a "3.0.0" project.mml > style.xml && \
 
-	cp -r /tmp/openstreetmap-carto /home/openstreetmap-carto && \ 
+	cp -r /tmp/openstreetmap-carto /home/openstreetmap-carto && \
 	cd /tmp
 
 # Install the Mapnik stylesheet
@@ -157,7 +134,7 @@ ADD bin/help.txt /usr/local/share/doc/run/help.txt
 
 RUN mv /etc/apache2/conf-available/security.conf /etc/apache2/conf-available/security.conf.orig && \
 	cd /etc/apache2/conf-available && \
-	wget https://raw.githubusercontent.com/virtadpt/ubuntu-hardening/master/16.04-lts/apache2/conf-available/security.conf && \
+	wget https://raw.githubusercontent.com/virtadpt/ubuntu-hardening/master/18.04-lts/apache2/conf-available/security.conf && \
 	mv /etc/apache2/conf-available/security.conf /etc/apache2/conf-available/security.conf.hard && \
 	cd /tmp/
 
@@ -187,4 +164,4 @@ RUN chmod a+x /var/lib/mod_tile
 CMD ["help"]
 
 # Clean up APT
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
