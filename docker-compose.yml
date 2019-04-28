@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
  app-osm:
@@ -7,10 +7,10 @@ services:
   volumes:
    - /data/osm-postgresql:/var/lib/postgresql
    - /data/osm-tiles:/var/lib/mod_tile
-   - /data/switzerland.pbf:/tmp/import.osm.pbf
+   - /data/Amsterdam.osm.pbf:/tmp/import.osm.pbf
   environment:
    OSM_IMPORT_FILE: '/tmp/import.osm.pbf'
-   OSM_IMPORT_CACHE: '11500'
+   OSM_IMPORT_CACHE: '38500'
    OSM_RENDER_MIN_ZOOM: '0'
    OSM_RENDER_MAX_ZOOM: '12'
    OSM_RENDER_FORCE: 'false'
